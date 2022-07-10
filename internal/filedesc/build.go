@@ -13,6 +13,7 @@ import (
 	"google.golang.org/protobuf/internal/genid"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
+	"log"
 )
 
 // Builder construct a protoreflect.FileDescriptor from the raw descriptor.
@@ -110,7 +111,7 @@ func (db Builder) Build() (out Out) {
 	out.Services = fd.allServices
 
 	if err := db.FileRegistry.RegisterFile(fd); err != nil {
-		panic(err)
+		CheckRegistryError(err)
 	}
 	return out
 }
@@ -154,4 +155,14 @@ func (db *Builder) unmarshalCounts(b []byte, isFile bool) {
 			b = b[m:]
 		}
 	}
+}
+
+// CheckRegistryError handles registration errors.
+// It is a variable so that its behavior can be replaced in another source file.
+var CheckRegistryError = func(err error) {
+	log.Printf(""+
+		"WARNING: %v\n"+
+		"A future release will panic on registration conflicts.\n"+
+		// TODO: Add a URL pointing to documentation on how to resolve conflicts.
+		"\n", err)
 }
